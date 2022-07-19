@@ -10,6 +10,56 @@
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/fonts.css">
     <link rel="stylesheet" href="css/style.css" id="main-styles-link">
+
+     <script>
+         function fetchAPICall(url, config){
+            return fetch(url, config).then(r => r.json()).catch(e => console.log(e))
+         }
+
+         // contact-form
+         function sendMail() {
+         
+            if(!document.querySelector('#contact-form #checkbox').checked)
+               {
+                  alert('Please agree to terms and conditions');
+                  return false;
+               }
+
+            const tokenURL = "http://3.110.162.90:8080/Token";
+            const tokenURLConfig = {
+               method : "POST"
+            };
+            const headers = new Headers();
+            headers.append('Accept', 'application/json'); // This one is enough for GET requests
+            headers.append('Content-Type', 'application/json'); // This one sends body
+                  
+            fetchAPICall(tokenURL, tokenURLConfig)
+            .then(r => {
+               console.log(r.Token);
+               if(r.Token)
+               {
+                  headers.append('Authorization',  'Bearer '+r.Token); // Set bearer
+                  fetchAPICall('http://3.110.162.90:8080/SendMail', {
+                  method: 'POST',
+                  headers: headers,
+                  body: JSON.stringify({
+                        organisation_name: 'org name',
+                        name : document.querySelector("#contact-form #firstname").value || '',
+                        mobile_number : document.querySelector("#contact-form #phone").value,
+                        email : document.querySelector("#contact-form #email").value,
+                        description : document.querySelector("#contact-form #message").value
+                     })
+                  })
+                  .then(res => {
+                     alert(' Your message was sent successfully ');
+                     window.location.reload();
+                     console.log(res)
+                  })
+               }
+            })
+            return false;       
+         }
+      </script>
   </head>
   <body>
     <div class="preloader">
@@ -165,33 +215,37 @@
           <div class="row">
             <div class="col-12">
               <h4>Get in touch with us</h4>
-              <p>Feel free to use the contact form below to contact us directly.</p>
+              <p>Feel free to use the contact form below to contact us directly.</p><br>
               <!-- RD Mailform-->
-              <form class=" form-lg" data-form-output="form-output-global" data-form-type="contact" method="post" action="">
+              <form class=" form-lg" data-form-output="form-output-global"  id="contact-form" onsubmit="return sendMail()">
                 <div class="row row-30">
                   <div class="col-lg-4">
                     <div class="form-wrap">
-                      <label class="form-label" for="contact-name">Enter Your Name</label>
-                      <input class="form-input" id="contact-name" type="text" name="name" data-constraints="@Required">
+                      <label class="form-label" for="contact-name"></label>
+                      <input class="form-input" id="firstname" placeholder="Enter Your Name" type="text" name="name" data-constraints="@Required">
                     </div>
                   </div>
                   <div class="col-lg-4">
                     <div class="form-wrap">
-                      <label class="form-label" for="contact-email">E-mail</label>
-                      <input class="form-input" id="contact-email" type="email" name="email" data-constraints="@Required @Email">
+                      <label class="form-label" for="contact-email"></label>
+                      <input class="form-input" id="email" placeholder="E-mail" type="email" name="email" data-constraints="@Required @Email">
                     </div>
                   </div>
                   <div class="col-lg-4">
                     <div class="form-wrap">
-                      <label class="form-label" for="contact-phone">Phone</label>
-                      <input class="form-input" id="contact-phone" type="text" name="phone" data-constraints="@PhoneNumber">
+                      <label class="form-label" for="contact-phone"></label>
+                      <input class="form-input" id="phone" type="text" placeholder="Phone" name="phone" data-constraints="@PhoneNumber">
                     </div>
                   </div>
                   <div class="col-12">
                     <div class="form-wrap">
-                      <label class="form-label" for="contact-message">Your Message</label>
-                      <textarea class="form-input" id="contact-message" name="message" data-constraints="@Required"></textarea>
+                      <label class="form-label" for="contact-message"></label>
+                      <textarea class="form-input" id="message" placeholder="Your Message" name="message" data-constraints="@Required"></textarea>
                     </div>
+                  </div>
+                   <div class="col-12">
+                  <input style="width: 20px!important; height: 20px!important;margin-right: ;4px: ;" name="checkbox" id="checkbox" placeholder="I agree for all" type="checkbox" />
+                                        <span>  I agree to Terms & Conditions</span>
                   </div>
                   <div class="col-12">
                     <button class="btn btn-primary" type="submit">Send Message</button>
